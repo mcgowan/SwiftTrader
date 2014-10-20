@@ -1,0 +1,37 @@
+body {
+	font-family: 'RobotoL';
+}
+
+td {
+	vertical-align: middle !important;
+}
+
+.dropdown-menu {
+	min-width: 10px;
+	z-index: 99000;	
+}
+
+.nav-tabs > li {
+	font-weight: bold;
+}
+
+.nav-tabs-contents {
+	position: relative;
+	padding: 10px 5px 5px 5px;
+}
+
+.text-align-center {
+   text-align: center;   
+}
+
+.text-align-right {
+   text-align: right;   
+}
+
+@font-face {
+	font-family: 'RobotoL';
+	font-style: normal;
+	font-weight: 300;
+	src: local('Roboto Light'), local('Roboto-Light'),
+	url(http://themes.googleusercontent.com/static/fonts/roboto/v10/Pru33qjShpZSmG3z6VYwnT8E0i7KZn-EPnyo3HZu7kw.woff) format('woff');
+}
