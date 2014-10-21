@@ -2,33 +2,13 @@ var SwiftTraderApp = angular.module('SwiftTrader', ['ui.bootstrap'])
     .value('api', 'http://localhost:3000/api')
 .factory('SwiftTraderService', function ($http, $log, api) {
     return {
-        
-        searchTickers: function (search, callback) {
-            $http({ method: 'GET', url: '{0}/tickers?search={1}'.format(api, search) }).
-				success(function (data, status, headers, config) {
-				    callback(data);
-				}).
-				error(function (data, status, headers, config) {
-				    $log.warn(data, status, headers, config);
-				});
+        searchTickers: function (value) {
+            return $http({ method: 'GET', url: 'http://localhost:3000/api/tickers?search=' + value }).then(function(response){
+                return response.data;
+            }, function (error) {
+                $log.warn(error);
+            });
         },
-
-        searchTest: function (search) {
-            // return $http({ method: 'GET', url: '{0}/tickers?search={1}'.format(api, search) }).
-            //     success(function (data, status, headers, config) {
-            //         return data;
-            //     }).
-            //     error(function (data, status, headers, config) {
-            //         $log.warn(data, status, headers, config);
-            //     });
-
-            // return $http({ method: 'GET', url: 'http://localhost:3000/api/tickers?search={1}'.format(search) }).then(function(response){
-            //   return response.data;
-            // });
-
-        },
-
-
     //     getListing: function (id, callback) {
     //         $http({ method: 'GET', url: '{0}/list/{1}'.format(api, id) }).
 				// success(function (data, status, headers, config) {

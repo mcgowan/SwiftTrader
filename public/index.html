@@ -36,6 +36,14 @@
 
 	<div class="container" ng-controller="OrderCtrl">
 
+    <script type="text/ng-template" id="tickerTemplate.html">
+      <a>
+      <span bind-html-unsafe="match.model.symbol | typeaheadHighlight:query"></span>
+      <i>({{match.model.name}})</i>
+      </a>
+    </script>
+
+
 		<ul class="nav nav-tabs" role="tablist">
 			<li class="active"><a href="#">Long</a></li>
 			<li><a href="#">Short</a></li>
@@ -47,13 +55,9 @@
         
         <div class="form-group">
           <label class="sr-only" for="txtSymbol">Symbol</label>
-          <!-- 
-          <input type="input" class="form-control" id="txtSymbol" ng-keydown="txtSymbolKeydown" placeholder="Symbol"> 
-        -->
-
-          <pre>Model: {{tick | json}}</pre>
-
-          <input type="text" ng-model="tick" typeahead="ticker as ticker.name for ticker in tickers($viewValue)">
+          
+          <pre>Model: {{result | json}}</pre>
+          <input type="text" ng-model="result" typeahead="t as t.symbol for t in tickers($viewValue)" typeahead-template-url="tickerTemplate.html" />
 
         </div>
 
@@ -79,7 +83,7 @@
     </div>
   </div>
 
-  <div class="container" ng-controller="PositionsCtrl">
+<!--   <div class="container" ng-controller="PositionsCtrl">
     <div class="table-responsive">
       <table class="table">
         <thead>
@@ -197,9 +201,9 @@
 
         </tbody>
       </table>
-    </div><!-- /.table-responsive -->
-
-  </div> <!-- /container -->
+    </div>
+  </div>
+ -->
 
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>

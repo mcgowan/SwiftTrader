@@ -21,6 +21,8 @@ exports.search = function (req, res) {
 
         	_.each(body.ResultSet.Result, function(item) {
         		result.push({ symbol: item.symbol, name: item.name });
+                // result.push(item.name);
+
         	});
 
     		res.type('application/json');

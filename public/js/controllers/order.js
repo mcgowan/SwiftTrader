@@ -1,33 +1,9 @@
 var OrderCtrl = SwiftTraderApp.controller('OrderCtrl', function OrderCtrl($scope, $rootScope, SwiftTraderService, $http) {
 
-  // $scope.cities = function(cityName) {
-  //   return $http.jsonp("http://gd.geobytes.com/AutoCompleteCity?callback=JSON_CALLBACK &filter=US&q="+cityName).then(function(response){
-  //     return limitToFilter(response.data, 15);
-  //   });
-  // };
-
     $scope.tickers = function(value) {
-        // return SwiftTraderService.searchTest(value).then(function(response){
-        //   return response.data;
-        // });
-            // return $http({ method: 'GET', url: 'http://localhost:3000/api/tickers?search={1}'.format(value) })
-            return $http({ method: 'GET', url: 'http://localhost:3000/api/tickers?search=a' })
+        return SwiftTraderService.searchTickers(value);
+    };
 
-                .success(function (data, status, headers, config) {
-                    console.log(data);
-
-                    return data;
-                })
-                .error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
-                });
-
-            // .then(function(response){
-            //   console.log(response);
-            //   return response;
-            // });
-
-    }
 
     // var unbind = $rootScope.$on('search', function(){
     //     $scope.search();
