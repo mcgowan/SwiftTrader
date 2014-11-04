@@ -1,134 +1,64 @@
-var OrderCtrl = SwiftTraderApp.controller('OrderCtrl', function OrderCtrl($scope, $rootScope, SwiftTraderService, $http) {
+var OrderCtrl = ST.controller('OrderCtrl', function OrderCtrl($scope, $rootScope, api, socket) {
+
+    var actions = Object.freeze({ buy: { key: 1, value: 'BUY' }, sell: { key: 2, value: "SELL" } });
+
+    $scope.action = actions.buy;
+    $scope.tickerId = Math.floor((Math.random() * 1000) + 1);
+    $scope.quantity = 100;
+    $scope.price = 0;
+    $scope.stopPercent = 2;
+
+    var calcStop = function () {
+        $scope.stop = parseFloat(($scope.price - (($scope.price/100) * $scope.stopPercent)).toFixed(2));    
+    }
+
+    $scope.toggleAction = function () {
+        $scope.action === actions.buy ? $scope.action = actions.sell : $scope.action = actions.buy;
+    }
 
     $scope.tickers = function(value) {
-        return SwiftTraderService.searchTickers(value);
+        return api.searchTickers(value);
     };
 
+    $scope.setStopPercent = function (percent) {
+        $scope.stopPercent = percent;
+        if (percent === 0) {
+            if ($scope.stopPercent !== 0) $scope.stop = 0;
+        } else calcStop();
+    };
 
-    // var unbind = $rootScope.$on('search', function(){
-    //     $scope.search();
+    $scope.$watch('ticker', function(neu, old){
+        if (neu && neu.symbol) {
+            if(neu.symbol !== old.symbol){
+                $scope.ticker.id = $scope.tickerId;
+                socket.emit('ticker:price', $scope.ticker);
+                console.log($scope.ticker);
+            }
+        }
+    });    
+
+    socket.on('ticker:price', function (data) {
+        if (data.tickerId === $scope.tickerId) {
+            $scope.price = data.price;
+            $scope.marketValue = data.price * $scope.quantity;
+            if ($scope.stopPercent !== 0) calcStop();
+        }
+    });
+
+    // socket.on('order:next-valid-id', function (data) {
+
+    // // ib.placeOrder(orderId, ib.contract.stock('AAPL'), ib.order.market('SELL', 2, true));
+
+    //     socket.emit('order:place', { orderId });
+    //     // if (data.tickerId === $scope.tickerId) {
+    //     //     $scope.price = data.price;
+    //     //     $scope.marketValue = data.price * $scope.quantity;
+    //     //     if ($scope.stopPercent !== 0) calcStop();
+    //     // }
     // });
 
-    // $scope.$on('$destroy', unbind);
-
-    // $scope.getListings = function () {
-
-    //     if (!$scope.data.fetching && !$scope.data.nomore) {
-
-    //         $scope.data.fetching = true;
-
-    //         listingService.getListings($scope.data.start, $scope.criteria, function (data) {
-
-    //             $scope.data.fetching = false;
-
-    //             if (data.listings.length === 0) {
-    //                 $scope.data.nomore = true;
-
-    //             } else {
-    //                 _.each(data.listings, function (listing) {
-
-    //                     listing.busy = true;
-
-    //                     listingService.getListing(listing.data.id, function (data) {
-    //                         if (data.images.length !== 0) {
-    //                             listing.data.url = data.url;
-    //                             listing.data.images = data.images;
-    //                             listing.currentImage = listing.data.images[0];
-    //                             listing.currentImageIndex = 0;
-    //                             listing.favourite = $scope.isFavourite(listing);
-    //                             $scope.listings.push(listing);
-    //                         }
-    //                     });
-    //                 });
-
-    //                 $scope.data.start += 100;
-    //             }
-    //         });
-    //     }
-    // }
-
-    // $scope.search = function () {
-    //     $scope.restore();
-    //     $scope.data.start = 0;
-    //     $scope.data.nomore = false;
-    //     $scope.listings = [];
-    //     $scope.getListings();
-    // };
-
-    // $scope.next = function () {
-    //     $scope.getListings();
-    // }
-
-    // $scope.loaded = function (listing) {
-    //     listing.busy = false;
-    // }
-
-    // $scope.open = function (listing) {
-    //     window.open(listing.data.url);
-    // }
-
-    // $scope.hover = function (listing) {
-    //     if (listing.data.images && listing.data.images.length > 1)
-    //         listing.showPager = !listing.showPager;
-    // };
-
-    // $scope.pageLeft = function (listing) {
-    //     if (listing.currentImageIndex === 0) listing.currentImageIndex = (listing.data.images.length);
-    //     listing.currentImageIndex--;
-    //     listing.currentImage = listing.data.images[listing.currentImageIndex];
-    // };
-
-    // $scope.pageRight = function (listing) {
-    //     if (listing.currentImageIndex === (listing.data.images.length - 1)) listing.currentImageIndex = -1;
-    //     listing.currentImageIndex++;
-    //     listing.currentImage = listing.data.images[listing.currentImageIndex];
-    // };
-
-    // $scope.getFavourites = function () {
-    //     var favourites = angular.fromJson(localStorage["favourites"]);
-    //     return favourites ? favourites : [];
-    // }
-
-    // $scope.isFavourite = function (listing) {
-    //     return $.grep($scope.favourites, function(favourite, index) {
-    //         return favourite.id === listing.data.id;
-    //     }).length > 0;
-    // }
-
-    // $scope.addFavourite = function (listing) {
-    //     $scope.favourites.push(listing.data);
-    //     localStorage["favourites"] = angular.toJson($scope.favourites);
-    // }
-
-    // $scope.removeFavourite = function (listing) {
-    //     var index = $scope.favourites.indexOf(listing.data);
-    //     $scope.favourites.splice(index, 1);
-    //     localStorage["favourites"] = angular.toJson($scope.favourites);
-    // }
-
-    // $scope.toggleFavourite = function (listing) {
-    //     listing.favourite = !listing.favourite;
-    //     if (listing.favourite) {
-    //         $scope.addFavourite(listing);
-    //     } else {
-    //         $scope.removeFavourite(listing);
-    //     }
-    // }
-
-    //  $scope.restore = function () {
-    //     $scope.criteria = angular.fromJson(localStorage["criteria"]);
-
-    //     if (!$scope.criteria) {
-    //         $scope.criteria = {
-    //             keyword: '',
-    //             range: { min: 1000, max: 3000 }
-    //         };
-    //     }
-    //     $scope.data = {};
-    // }
-
-    // $scope.restore();
-    // $scope.favourites = $scope.getFavourites();
-    // $scope.search();
+    $scope.placeOrder = function () {
+        socket.emit('order:place', { symbol: $scope.ticker.symbol, action: $scope.action.value, quantity: parseInt($scope.quantity, 10), stop: parseFloat($scope.stop) });
+    }
 
 });

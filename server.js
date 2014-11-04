@@ -2,16 +2,69 @@ var express = require('express');
 
 var app = express();
 
-var tickers = require('./routes/tickers');
 
-app.get('/api/tickers', tickers.search);
+// web api methods...
 
+var yahoo = require('./routes/tickers');
+app.get('/api/tickers', yahoo.search);
+
+
+// static resources...
 app.use(express.static(__dirname + '/public/'));
 
-var server = app.listen(3000, function () {
 
-  var host = server.address().address;
-  var port = server.address().port;
+// socket.io gateway to IB...
 
-  console.log('listening at http://%s:%s', host, port);
-})
+var IB = require("./ibapi");
+var ib = new IB();
+
+ib.connect();
+
+var io = require('socket.io').listen(app.listen(3000));
+
+io.on('connection', function (socket) {
+	socket.on('error', function (err) {
+		console.error(err.message.red);
+	}).on('disconnect',function(){
+		ib.clean(socket);
+
+	// TODO: convert api to socket method...
+	// }).on('tickers:search', function (data) {
+	// 	yahoo.search(data);
+
+	}).on('ticker:price', function (data) {
+		
+		ib.getTickerPrice(socket, data);
+
+		// var price = 99.98;
+
+		// setInterval(function() { 
+		// 	socket.emit('ticker:price', { tickerId: data.id, price: price++ });
+		// }, 1000);
+
+	}).on('positions:get', function (data) {
+		ib.getPositions(socket, 'U1234567'); //TODO
+	}).on('order:place', function (data) {
+		ib.placeOrder(io.sockets, data);
+	}).on('orders:open', function () {
+		console.log('orders:open');
+		ib.getOpenOrders(socket);
+	});
+});
+
+function exitHandler(options, err) {
+    if (options.cleanup) {
+    	ib.disconnect();
+	}	
+    if (err) console.log(err.stack);
+    if (options.exit) process.exit();
+}
+
+//do something when app is closing
+process.on('exit', exitHandler.bind(null,{cleanup:true}));
+
+//catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, {exit:true}));

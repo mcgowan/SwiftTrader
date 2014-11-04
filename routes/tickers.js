@@ -20,7 +20,7 @@ exports.search = function (req, res) {
         	var _ = require('underscore');
 
         	_.each(body.ResultSet.Result, function(item) {
-        		result.push({ symbol: item.symbol, name: item.name });
+        		result.push({ symbol: item.symbol, name: item.name, price: 0 });
                 // result.push(item.name);
 
         	});
