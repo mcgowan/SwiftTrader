@@ -40,6 +40,15 @@ var ST = angular.module('ST', ['ui.bootstrap', 'fcsa-number'])
             })
         }
     };
+}).directive('stMenuInput', function () {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            $(element).click(function (event) {
+                event.stopPropagation();
+            });
+        }
+    };
 });
 
 

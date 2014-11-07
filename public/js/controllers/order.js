@@ -7,24 +7,34 @@ var OrderCtrl = ST.controller('OrderCtrl', function OrderCtrl($scope, $rootScope
     $scope.quantity = 100;
     $scope.price = 0;
     $scope.stopPercent = 2;
+    $scope.stopLoss = 0;
 
     var calcStop = function () {
-        $scope.stop = parseFloat(($scope.price - (($scope.price/100) * $scope.stopPercent)).toFixed(2));    
+        if ($scope.stopPercent !== 0) 
+            $scope.stop = parseFloat(($scope.price - (($scope.price/100) * $scope.stopPercent)).toFixed(2));
+
+        var margin = $scope.price - $scope.stop;
+        
+        if ($scope.action === actions.sell) {
+            $scope.stop = $scope.price + ($scope.price - $scope.stop);
+            $scope.stopLoss = margin * $scope.quantity;
+        } else {
+            $scope.stopLoss = margin * $scope.quantity * -1;
+        }
     }
+
+    $scope.setStopPercent = function (percent) {
+        $scope.stopPercent = percent;
+        calcStop();
+    };
 
     $scope.toggleAction = function () {
         $scope.action === actions.buy ? $scope.action = actions.sell : $scope.action = actions.buy;
+        calcStop();
     }
 
     $scope.tickers = function(value) {
         return api.searchTickers(value);
-    };
-
-    $scope.setStopPercent = function (percent) {
-        $scope.stopPercent = percent;
-        if (percent === 0) {
-            if ($scope.stopPercent !== 0) $scope.stop = 0;
-        } else calcStop();
     };
 
     $scope.$watch('ticker', function(neu, old){

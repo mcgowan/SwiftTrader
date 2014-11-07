@@ -129,10 +129,10 @@ IB.prototype.getPositions = function (socket, account) {
 							return s.contract.symbol === position.contract.symbol;
 						});
 
-						console.log('stop-----');
-						console.log(stop);
-
-						position.stop = stop;
+						if (stop) {
+							position.stop = stop;
+							position.stopPrice = stop.order.auxPrice;
+						}
 
 						socket.emit('positions:get', position);
 					}
@@ -159,16 +159,11 @@ IB.prototype.placeOrder = function (sockets, order) {
 	
 	me.ib.once('nextValidId', function (orderId) {
 
-		
-		console.log(order.stop);
-
 		me.ib.placeOrder(orderId, me.ib.contract.stock(order.symbol), me.ib.order.market(order.action, order.quantity, true));
 
 		if (order.stop && order.stop > 0) {
 			me.ib.placeOrder(orderId + 1, me.ib.contract.stock(order.symbol), me.ib.order.stop(order.action === 'SELL' ? 'BUY' : 'SELL', order.quantity, order.stop, true));
 		}
-
-		// TODO: place stop too
 
 		me.ib.on('orderStatus', function (id, status, filled, remaining, avgFillPrice, permId,
 		                               parentId, lastFillPrice, clientId, whyHeld) {
@@ -207,11 +202,18 @@ IB.prototype.placeOrder = function (sockets, order) {
 				// );
 
 				setTimeout(function () {
-					sockets.emit('positions:update');
+					sockets.emit('positions:update', { orderId: orderId, symbol: order.symbol, quantity: order.action === 'SELL' ? order.quantity * -1 : order.quantity });
 				}, 2000);
 			}
 		});
 	});
+}
+
+IB.prototype.closePosition = function (sockets, position) {
+	if (position.stop) 
+		this.ib.cancelOrder(position.stop.orderId);
+
+	this.placeOrder(sockets, { symbol: position.contract.symbol, action: position.quantity > 0 ? 'SELL' : 'BUY', quantity: Math.abs(position.quantity) });
 }
 
 IB.prototype.test = function () {

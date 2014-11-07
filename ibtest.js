@@ -1,45 +1,4 @@
 
-'use strict';
-
-require('colors');
-
-var _ = require('lodash');
-
-var ib = new (require('ib'))({
-  // clientId: 0,
-  // host: '127.0.0.1',
-  // port: 7496
-}).on('error', function (err) {
-  console.error(err.message.red);
-}).on('result', function (event, args) {
-  if (!_.contains(['position', 'positionEnd'], event)) {
-    console.log('%s %s', (event + ':').yellow, JSON.stringify(args));
-  }
-}).on('position', function (account, contract, pos, avgCost) {
-  console.log(
-    '%s %s%s %s%s %s%s %s%s',
-    '[position]'.cyan,
-    'account='.bold, account,
-    'contract='.bold, JSON.stringify(contract),
-    'pos='.bold, pos,
-    'avgCost='.bold, avgCost
-  );
-}).on('positionEnd', function () {
-  console.log('[positionEnd]'.cyan);
-});
-
-ib.connect();
-
-ib.reqPositions();
-
-ib.on('positionEnd', function () {
-  ib.disconnect();
-});
-
-// /*
-//  * examples/placeOrder.js
-//  */
-
 // 'use strict';
 
 // require('colors');
@@ -53,86 +12,127 @@ ib.on('positionEnd', function () {
 // }).on('error', function (err) {
 //   console.error(err.message.red);
 // }).on('result', function (event, args) {
-//   if (!_.contains(['nextValidId', 'openOrder', 'openOrderEnd', 'orderStatus'], event)) {
+//   if (!_.contains(['position', 'positionEnd'], event)) {
 //     console.log('%s %s', (event + ':').yellow, JSON.stringify(args));
 //   }
-// }).on('nextValidId', function (orderId) {
+// }).on('position', function (account, contract, pos, avgCost) {
 //   console.log(
-//     '%s %s%d',
-//     '[nextValidId]'.cyan,
-//     'orderId='.bold, orderId
-//   );
-// }).on('openOrder', function (orderId, contract, order, orderState) {
-//   console.log(
-//     '%s %s%d %s%s %s%s %s%s',
-//     '[openOrder]'.cyan,
-//     'orderId='.bold, orderId,
+//     '%s %s%s %s%s %s%s %s%s',
+//     '[position]'.cyan,
+//     'account='.bold, account,
 //     'contract='.bold, JSON.stringify(contract),
-//     'order='.bold, JSON.stringify(order),
-//     'orderState='.bold, JSON.stringify(orderState)
+//     'pos='.bold, pos,
+//     'avgCost='.bold, avgCost
 //   );
-// }).on('openOrderEnd', function () {
-//   console.log('[openOrderEnd]'.cyan);
-// }).on('orderStatus', function (id, status, filled, remaining, avgFillPrice, permId,
-//                                parentId, lastFillPrice, clientId, whyHeld) {
-//   console.log(
-//     '%s %s%d %s%s %s%d %s%d %s%d %s%d %s%d %s%d %s%d %s%s',
-//     '[orderStatus]'.cyan,
-//     'id='.bold, id,
-//     'status='.bold, status,
-//     'filled='.bold, filled,
-//     'remaining='.bold, remaining,
-//     'avgFillPrice='.bold, avgFillPrice,
-//     'permId='.bold, permId,
-//     'parentId='.bold, parentId,
-//     'lastFillPrice='.bold, lastFillPrice,
-//     'clientId='.bold, clientId,
-//     'whyHeld='.bold, whyHeld
-//   );
+// }).on('positionEnd', function () {
+//   console.log('[positionEnd]'.cyan);
 // });
 
-// ib.once('nextValidId', function (orderId) {
-//   console.log('Placing orders...'.yellow);
+// ib.connect();
 
-//   // Place orders
-//   // ib.placeOrder(orderId, ib.contract.stock('AAPL'), ib.order.market('SELL', 2, true));
-//   // ib.placeOrder(orderId + 1, ib.contract.stock('GOOG'), ib.order.market('BUY', 2, true));
-//   // ib.placeOrder(orderId + 2, ib.contract.stock('FB'), ib.order.market('SELL', 2, true));
+// ib.reqPositions();
 
-//   ib.placeOrder(38, ib.contract.stock('AAPL'), ib.order.market('SELL', 2, true));
-//   ib.placeOrder(39, ib.contract.stock('GOOG'), ib.order.market('BUY', 2, true));
-//   ib.placeOrder(40, ib.contract.stock('FB'), ib.order.market('SELL', 2, true));
-
-//   // ib.placeOrder(orderId, ib.contract.stock('AAPL'), ib.order.market('BUY', 1, true));
-//   // ib.placeOrder(orderId + 1, ib.contract.stock('GOOG'), ib.order.market('SELL', 1, true));
-//   // ib.placeOrder(orderId + 2, ib.contract.stock('FB'), ib.order.market('BUY', 1, true));
-
-
-//   // Check open orders
-//   ib.reqOpenOrders();
-
-//   // Check next orderId
-//   ib.reqIds(1);
-
-//   // // Cancel orders after 5 seconds.
-//   // setTimeout(function () {
-//   //   console.log('Cancelling orders...'.yellow);
-//   //   ib.cancelOrder(orderId);
-//   //   ib.cancelOrder(orderId + 1);
-//   //   ib.cancelOrder(orderId + 2);
-
-//   //   ib.once('openOrderEnd', function () {
-//   //     console.log('Disconnecting...'.yellow);
-//   //     ib.disconnect();
-//   //   });
-
-//   //   ib.reqAllOpenOrders();
-//   // }, 5000);
-
+// ib.on('positionEnd', function () {
+//   ib.disconnect();
 // });
 
-// ib.connect()
-//   .reqIds(1);
+// /*
+//  * examples/placeOrder.js
+//  */
+
+'use strict';
+
+require('colors');
+
+var _ = require('lodash');
+
+var ib = new (require('ib'))({
+  // clientId: 0,
+  // host: '127.0.0.1',
+  // port: 7496
+}).on('error', function (err) {
+  console.error(err.message.red);
+}).on('result', function (event, args) {
+  if (!_.contains(['nextValidId', 'openOrder', 'openOrderEnd', 'orderStatus'], event)) {
+    console.log('%s %s', (event + ':').yellow, JSON.stringify(args));
+  }
+}).on('nextValidId', function (orderId) {
+  console.log(
+    '%s %s%d',
+    '[nextValidId]'.cyan,
+    'orderId='.bold, orderId
+  );
+}).on('openOrder', function (orderId, contract, order, orderState) {
+  console.log(
+    '%s %s%d %s%s %s%s %s%s',
+    '[openOrder]'.cyan,
+    'orderId='.bold, orderId,
+    'contract='.bold, JSON.stringify(contract),
+    'order='.bold, JSON.stringify(order),
+    'orderState='.bold, JSON.stringify(orderState)
+  );
+}).on('openOrderEnd', function () {
+  console.log('[openOrderEnd]'.cyan);
+}).on('orderStatus', function (id, status, filled, remaining, avgFillPrice, permId,
+                               parentId, lastFillPrice, clientId, whyHeld) {
+  console.log(
+    '%s %s%d %s%s %s%d %s%d %s%d %s%d %s%d %s%d %s%d %s%s',
+    '[orderStatus]'.cyan,
+    'id='.bold, id,
+    'status='.bold, status,
+    'filled='.bold, filled,
+    'remaining='.bold, remaining,
+    'avgFillPrice='.bold, avgFillPrice,
+    'permId='.bold, permId,
+    'parentId='.bold, parentId,
+    'lastFillPrice='.bold, lastFillPrice,
+    'clientId='.bold, clientId,
+    'whyHeld='.bold, whyHeld
+  );
+});
+
+ib.once('nextValidId', function (orderId) {
+  console.log('Placing orders...'.yellow);
+
+  // Place orders
+  ib.placeOrder(orderId, ib.contract.stock('AAPL'), ib.order.market('SELL', 2, true));
+  // ib.placeOrder(orderId + 1, ib.contract.stock('GOOG'), ib.order.market('BUY', 2, true));
+  // ib.placeOrder(orderId + 2, ib.contract.stock('FB'), ib.order.market('SELL', 2, true));
+
+  // ib.placeOrder(38, ib.contract.stock('AAPL'), ib.order.market('SELL', 2, true));
+  // ib.placeOrder(39, ib.contract.stock('GOOG'), ib.order.market('BUY', 2, true));
+  // ib.placeOrder(40, ib.contract.stock('FB'), ib.order.market('SELL', 2, true));
+
+  // ib.placeOrder(orderId, ib.contract.stock('AAPL'), ib.order.market('BUY', 1, true));
+  // ib.placeOrder(orderId + 1, ib.contract.stock('GOOG'), ib.order.market('SELL', 1, true));
+  // ib.placeOrder(orderId + 2, ib.contract.stock('FB'), ib.order.market('BUY', 1, true));
+
+
+  // Check open orders
+  ib.reqOpenOrders();
+
+  // Check next orderId
+  ib.reqIds(1);
+
+  // Cancel orders after 5 seconds.
+  setTimeout(function () {
+    console.log('Cancelling orders...'.yellow);
+    ib.cancelOrder(orderId);
+    ib.cancelOrder(orderId + 1);
+    ib.cancelOrder(orderId + 2);
+
+    ib.once('openOrderEnd', function () {
+      console.log('Disconnecting...'.yellow);
+      ib.disconnect();
+    });
+
+    ib.reqAllOpenOrders();
+  }, 5000);
+
+});
+
+ib.connect()
+  .reqIds(1);
 
 
 

@@ -4,6 +4,43 @@ body {
 
 td {
 	vertical-align: middle !important;
+	white-space: nowrap;
+}
+
+li > input {
+	width: 90px;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+li.input {
+	padding: 4px 4px 0 5px;
+}
+
+li > div.form-group {
+	margin-bottom: 2px;
+}
+
+li > div > input.form-control {
+	/*height: 28px;*/
+}
+
+.btn:focus, .btn:active:focus, .btn.active:focus {
+	outline: none;
+}
+
+.btn-group > .btn + .left-3 {
+	left: -3px;
+}
+
+.btn-group > .btn + .dropdown-toggle {
+	height: 34px;
+}
+
+.btn-group > .btn,
+.btn-group-vertical > .btn {
+	position: relative;
+	float: none;
 }
 
 .dropdown-menu {

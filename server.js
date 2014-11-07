@@ -44,6 +44,8 @@ io.on('connection', function (socket) {
 
 	}).on('positions:get', function (data) {
 		ib.getPositions(socket, 'U1234567'); //TODO
+	}).on('position:close', function (data) {
+		ib.closePosition(io.sockets, data);
 	}).on('order:place', function (data) {
 		ib.placeOrder(io.sockets, data);
 	}).on('orders:open', function () {
