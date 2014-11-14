@@ -54,7 +54,7 @@
         <!-- Ticker -->
         <div class="form-group" ng-class="{'has-error': !ticker}">
           <div class="input-group">
-            <input class="form-control" type="text" name="symbol" ng-model="ticker" typeahead="t as t.symbol for t in tickers($viewValue)" typeahead-template-url="tickerTemplate.html" placeholder="Symbol" ng-change="getTickerPrice(ticker)" required/>
+            <input class="form-control" type="text" name="symbol" ng-model="ticker" typeahead="t as t.symbol for t in tickers($viewValue)" typeahead-template-url="tickerTemplate.html" placeholder="Symbol" ng-change="getTickerPrice(ticker)" required st-select-on-click />
             <span class="input-group-addon">{{ price | number:2 }}</span>
           </div>
         </div>
@@ -63,8 +63,10 @@
         <!-- Quantity -->
         <div class="form-group" ng-class="{'has-error':order.quantity.$invalid}">
             <div class="input-group">
-              <input class="form-control" type="text" name="quantity" ng-model="quantity" placeholder="Quantity" required fcsa-number="{ maxDecimals: 0, preventInvalidInput: true }"/>
+              <input class="form-control" type="text" name="quantity" ng-model="quantity" placeholder="Quantity" required st-select-on-click fcsa-number/>
               <span class="input-group-addon">{{ price * quantity | number:2 }}</span>
+
+              <!-- fcsa-number="{ maxDecimals: 0, preventInvalidInput: true }"  -->
           </div>
         </div>
 
@@ -73,12 +75,13 @@
         <div class="form-group" ng-class="{'has-error':order.stop.$invalid || action.key === 1 ? stop > price : stop < price}">
           <div class="input-group">
             
-            <input class="form-control" type="text" name="stop" ng-model="stop" placeholder="Stop Loss" ng-change="setStopPercent(0)" fcsa-number="{ preventInvalidInput: true }"/>
+            <input class="form-control" type="text" name="stop" ng-model="stop" placeholder="Stop Loss" ng-change="setStopPercent(0)" fcsa-number="{ preventInvalidInput: true }" st-select-on-click />
             
             <span class="input-group-addon input-group-addon-right">{{ stopLoss | number:2 }}</span>
 
             <div class="input-group-addon input-group-addon-dropdown">
                 <button type="button" class="btn input-group-addon-button" ng-class="{'has-error':order.stop.$invalid  || action.key === 1 ? stop > price : stop < price}" data-toggle="dropdown">{{ stopPercent == 0 ? "$M" : stopPercent + "%" }}&nbsp<span class="caret"></span></button>
+
                 <ul class="dropdown-menu pull-right">
                     <li><a href="#" ng-click="setStopPercent(1)">1%</a></li>
                     <li><a href="#" ng-click="setStopPercent(2)">2%</a></li>
@@ -92,7 +95,7 @@
         </div>
 
         <div class="form-group">
-          <button type="submit" class="btn btn-primary" ng-click="">Reset</button>
+          <button type="submit" class="btn btn-primary" ng-click="reset()">Reset</button>
           <button type="submit" class="btn btn-success" ng-click="placeOrder()">Open</button>
         </div>
 
@@ -139,7 +142,7 @@
               </td>
               <td class='text-align-center'>
                 <div class="btn-group">
-                <button type="button" class="btn btn-success" style="width: 60px" ng-click="put()">{{position.put}}</button>
+                <button type="button" class="btn btn-success" style="width: 60px" ng-click="put(position)">{{position.put}}</button>
                 <button type="button" class="btn btn-success dropdown-toggle left-3" data-toggle="dropdown">
                   <span class="caret"></span>
                   <span class="sr-only">Toggle Dropdown</span>
@@ -152,7 +155,7 @@
                   <li><a href="#" ng-click="setPut(position, 400)">+400%</a></li>
                   <li class="input">
                     <div class="form-group" ng-class="{'has-error':position.put === undefined }">
-                      <input class="form-control" ng-model="position.put" type="number" st-menu-input/>
+                      <input class="form-control" ng-model="position.put" type="number" st-menu-input st-select-on-click/>
                     </div>
                   </li>
                 </ul>
@@ -160,7 +163,7 @@
               </td>
               <td class='text-align-center'>
                 <div class="btn-group">
-                <button type="button" class="btn btn-danger" style="width: 60px" ng-click="pop()">{{position.pop * -1}}</button>
+                <button type="button" class="btn btn-danger" style="width: 60px" ng-click="pop(position)">{{position.pop * -1}}</button>
                 <button type="button" class="btn btn-danger dropdown-toggle left-3" data-toggle="dropdown">
                   <span class="caret"></span>
                   <span class="sr-only">Toggle Dropdown</span>
@@ -171,7 +174,7 @@
                   <li><a href="#" ng-click="setPop(position, 75)">-75%</a></li>
                   <li class="input">
                     <div class="form-group" ng-class="{'has-error':position.pop === undefined }">
-                      <input class="form-control" ng-model="position.pop" type="number" max="{{position.quantity - 1}}" st-menu-input/>
+                      <input class="form-control" ng-model="position.pop" type="number" max="{{position.quantity - 1}}" st-menu-input st-select-on-click/>
                     </div>
                   </li>
                 </ul>
@@ -179,7 +182,8 @@
               </td>
               <td>
                 <div class="input-group" ng-class="{'has-error': position.quantity < 0 ? position.stopPrice < position.price : position.stopPrice > position.price}">
-                    <input class="form-control" type="text" name="stop" ng-model="position.stopPrice" ng-change="setStopPercent(position, 0)" fcsa-number="{ preventInvalidInput: true }"/> 
+                    <input class="form-control" type="text" name="stop" ng-model="position.stopPrice" ng-change="setStopPercent(position, 0)" fcsa-number="{ preventInvalidInput: true, maxDecimals: 2 }" st-select-on-click />
+
                     <div class="input-group-addon input-group-addon-dropdown">
                         <button type="button" class="btn input-group-addon-button" ng-class="{'has-error':position.stopPrice.$invalid  || position.quantity < 0 ? position.stopPrice < position.price : position.stopPrice > position.price}" data-toggle="dropdown">{{ !position.stopPercent || position.stopPercent == 0 ? "$M" : position.stopPercent + "%" }}&nbsp<span class="caret"></span></button>
                         <ul class="dropdown-menu pull-right">
@@ -196,7 +200,7 @@
               </td>
 
               <td>
-                <button type="submit" class="btn btn-primary" ng-click="getOpenOrders()">Update</button>
+                <button type="submit" class="btn btn-primary" ng-click="updateStop(position)">Update</button>
               </td>
               <td class='text-align-right'>
                 <button type="submit" class="btn btn-danger" ng-click="closePosition(position)">Close</button>

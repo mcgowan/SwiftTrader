@@ -43,11 +43,19 @@ io.on('connection', function (socket) {
 		// }, 1000);
 
 	}).on('positions:get', function (data) {
-		ib.getPositions(socket, 'U1234567'); //TODO
+		// ib.getPositions(socket, 'U1234567'); //TODO
+		ib.getPositions(socket, 'DU210102'); //TODO
+
 	}).on('position:close', function (data) {
 		ib.closePosition(io.sockets, data);
+	}).on('position:put', function (data) {
+		ib.updatePosition(io.sockets, ib.actions.Put, data);
+	}).on('position:pop', function (data) {
+		ib.updatePosition(io.sockets, ib.actions.Pop, data);
+	}).on('stop:update', function (data) {
+		ib.updateStop(io.sockets, data);
 	}).on('order:place', function (data) {
-		ib.placeOrder(io.sockets, data);
+		ib.placeOrder(io.sockets, ib.orderTypes.Market, data);
 	}).on('orders:open', function () {
 		console.log('orders:open');
 		ib.getOpenOrders(socket);

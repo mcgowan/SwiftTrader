@@ -49,7 +49,16 @@ var ST = angular.module('ST', ['ui.bootstrap', 'fcsa-number'])
             });
         }
     };
-});
+}).directive('stSelectOnClick', function () {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            element.on('click', function () {
+                this.select();
+            });
+        }
+    };
+});    
 
 
 

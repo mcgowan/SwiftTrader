@@ -11,21 +11,6 @@ var PositionsCtrl = ST.controller('PositionsCtrl', function PositionsCtrl($scope
         }
     }
 
-    // var calculateStop = function () {
-    //     if ($scope.stopPercent !== 0) 
-    //         $scope.stop = parseFloat(($scope.price - (($scope.price/100) * $scope.stopPercent)).toFixed(2));
-
-    //     var margin = $scope.price - $scope.stop;
-        
-    //     if ($scope.action === actions.sell) {
-    //         $scope.stop = $scope.price + ($scope.price - $scope.stop);
-    //         $scope.stopLoss = margin * $scope.quantity;
-    //     } else {
-    //         $scope.stopLoss = margin * $scope.quantity * -1;
-    //     }
-    // }
-
-
     $scope.getOpenOrders = function () {
         socket.emit('orders:open');
     }
@@ -44,18 +29,27 @@ var PositionsCtrl = ST.controller('PositionsCtrl', function PositionsCtrl($scope
             position.stopPrice = position.stop.order.auxPrice;
     }
 
+    $scope.updateStop = function (position) {
+        socket.emit('stop:update', { 
+            orderId: position.stop ? position.stop.orderId : undefined, 
+            symbol: position.symbol, 
+            action: position.quantity > 0 ? 'SELL' : 'BUY', 
+            quantity: parseInt(position.quantity, 10), 
+            stopPrice: parseFloat(position.stopPrice) 
+        });
+    }
+
     $scope.put = function (position) {
-
-        // 
-
+        socket.emit('position:put', position);
     }
 
     $scope.setPut = function (position, percent) {
+        console.log(position);
         position.put = position.quantity / 100 * percent;
     }
 
     $scope.pop = function (position) {
-
+        socket.emit('position:pop', position);
     }
 
     $scope.setPop = function (position, percent) {
@@ -63,19 +57,43 @@ var PositionsCtrl = ST.controller('PositionsCtrl', function PositionsCtrl($scope
     }
 
     socket.on('positions:get', function (data) {
-
-        console.log(data);
-
         var position = _.find($scope.positions, function (p) { return p.contract.symbol === data.contract.symbol });
 
         if (position) {
             // apply update to current position
+
+            console.log('position exists, will update');
+
+            // quantity
+            // average price
+            // stop
+
+            position.quantity = data.quantity;
+            position.averageCost = data.averageCost
+
+            if (data.stop) position.stop = data.stop;
+
+            console.log(data);
+                // var position = { 
+                //     socketId: socket.id,
+                //     contract: contract,
+                //     quantity: position,
+                //     marketPrice: marketPrice,
+                //     marketValue: marketValue,
+                //     averageCost: averageCost,
+                //     unrealizedPNL: unrealizedPNL,
+                //     realizedPNL: realizedPNL,
+                //     accountName: accountName
+                // }
 
 
 
 
 
         } else {
+
+            console.log(data);
+
             position = data;
             position.symbol = data.contract.symbol;
             position.put = data.quantity;
@@ -99,6 +117,9 @@ var PositionsCtrl = ST.controller('PositionsCtrl', function PositionsCtrl($scope
     });
 
     socket.on('positions:update', function (data) {
+        
+
+
         var position = _.find($scope.positions, function (p) { return p.contract.symbol === data.symbol });
 
         // remove if position closed out
@@ -110,6 +131,21 @@ var PositionsCtrl = ST.controller('PositionsCtrl', function PositionsCtrl($scope
 
         socket.emit('positions:get');
     });
+
+    socket.on('stop:updated', function (data) {
+        
+        console.log('stop:updated');
+        console.log(data);
+
+        var position = _.find($scope.positions, function (p) { return p.contract.symbol === data.symbol });
+
+        position.stopPrice = data.stopPrice;
+        position.stop ? position.stop.orderId = data.orderId : position.stop = { orderId: data.orderId };
+
+        console.log(position);
+
+    });
+
  
     var init = function () {
         $scope.positions = [];
