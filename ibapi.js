@@ -170,8 +170,13 @@ IB.prototype.placeOrder = function (sockets, type, order) {
 			me.ib.placeOrder(orderId, me.ib.contract.stock(order.symbol), me.ib.order.market(order.action, order.quantity, true));
 
 
-		} else if (type === me.orderTypes.Stop)
+		} else if (type === me.orderTypes.Stop) {
+			console.log('placing stop');
+			console.log(order);
+
 			me.ib.placeOrder(orderId, me.ib.contract.stock(order.symbol), me.ib.order.stop(order.action, order.quantity, order.stopPrice, true));
+
+		}
 		
 
 		me.ib.on('orderStatus', function (id, status, filled, remaining, avgFillPrice, permId,
@@ -193,15 +198,19 @@ IB.prototype.placeOrder = function (sockets, type, order) {
 
 							sockets.emit('positions:update', { orderId: orderId, symbol: order.symbol, quantity: order.action === 'SELL' ? order.quantity * -1 : order.quantity });
 
-							if (order.stop && order.stop > 0) {
+							if (order.stop && !isNaN(order.stop) && order.stop > 0) {
+								
 								console.log('will place stop');
 								
 								// me.ib.placeOrder(orderId + 1, me.ib.contract.stock(order.symbol), me.ib.order.stop(order.action === 'SELL' ? 'BUY' : 'SELL', order.stopQuantity ? order.stopQuantity : order.quantity, order.stop, true));
 
 								me.placeOrder(sockets, me.orderTypes.Stop, { 
 									symbol: order.symbol, 
+									
 									// action: order.action === 'SELL' ? 'BUY' : 'SELL', 
-									action: order.quantity < 0 ? 'BUY' : 'SELL',
+									action: order.stopAction,
+
+
 									quantity: order.stopQuantity ? order.stopQuantity : order.quantity, 
 									stopPrice: order.stop 
 								});
@@ -247,6 +256,12 @@ IB.prototype.closePosition = function (sockets, position) {
 
 IB.prototype.updatePosition = function (sockets, action, position) {
 	console.log('updatePosition');
+	console.log(position);
+
+
+	var put = Math.abs(position.put);
+	var pop = Math.abs(position.pop);
+	var qty = Math.abs(position.quantity);
 
 	if (position.stop) {
 		console.log('updatePosition - cancelling stop');
@@ -254,13 +269,22 @@ IB.prototype.updatePosition = function (sockets, action, position) {
 		this.ib.cancelOrder(position.stop.orderId);
 	}
 
-var order = { 
+	var order = { 
 		symbol: position.contract.symbol, 
-		action: action === this.actions.Put ? 'BUY' : 'SELL', 
-		quantity: action === this.actions.Put ? position.put : position.pop,
 		stop: parseFloat(position.stopPrice),
-		stopQuantity: action === this.actions.Put ? Math.abs(position.quantity) + position.put : Math.abs(position.quantity) - position.pop
+		stopAction: position.quantity > 0 ? 'SELL' : 'BUY'
 	};
+
+	if (action === this.actions.Put) {
+		order.action = position.quantity > 0 ? 'BUY' : 'SELL';
+		order.quantity = put;
+		order.stopQuantity = qty + put;
+
+	} else {
+		order.action = position.quantity > 0 ? 'SELL' : 'BUY'; 
+		order.quantity = pop;
+		order.stopQuantity = qty - pop;
+	}
 
 	console.log(order);
 

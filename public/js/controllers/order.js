@@ -4,8 +4,9 @@ var OrderCtrl = ST.controller('OrderCtrl', function OrderCtrl($scope, $rootScope
 
     $scope.action = actions.buy;
     $scope.tickerId = Math.floor((Math.random() * 1000) + 1);
-    $scope.quantity = 100;
+    $scope.quantity = 0;
     $scope.price = 0;
+    $scope.stop = 0;
     $scope.stopLoss = 0;
     $scope.stopPercent = 2;
 
@@ -54,6 +55,16 @@ var OrderCtrl = ST.controller('OrderCtrl', function OrderCtrl($scope, $rootScope
 
     $scope.placeOrder = function () {
         socket.emit('order:place', { symbol: $scope.ticker.symbol, action: $scope.action.value, quantity: parseInt($scope.quantity, 10), stop: parseFloat($scope.stop) });
+        $scope.reset();
+    }
+
+    $scope.reset = function () {
+        socket.emit('ticker:cancel', $scope.tickerId);
+        $scope.ticker = undefined;
+        $scope.quantity = 0;
+        $scope.price = 0;
+        $scope.stop = 0;
+        $scope.stopLoss = 0;
     }
 
 });

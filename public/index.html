@@ -54,7 +54,7 @@
         <!-- Ticker -->
         <div class="form-group" ng-class="{'has-error': !ticker}">
           <div class="input-group">
-            <input class="form-control" type="text" name="symbol" ng-model="ticker" typeahead="t as t.symbol for t in tickers($viewValue)" typeahead-template-url="tickerTemplate.html" placeholder="Symbol" ng-change="getTickerPrice(ticker)" required st-select-on-click />
+            <input class="form-control" type="text" name="symbol" ng-model="ticker" typeahead="t as t.symbol for t in tickers($viewValue)" typeahead-template-url="tickerTemplate.html" placeholder="Symbol" ng-change="getTickerPrice(ticker)" st-select-on-click />
             <span class="input-group-addon">{{ price | number:2 }}</span>
           </div>
         </div>
@@ -63,7 +63,7 @@
         <!-- Quantity -->
         <div class="form-group" ng-class="{'has-error':order.quantity.$invalid}">
             <div class="input-group">
-              <input class="form-control" type="text" name="quantity" ng-model="quantity" placeholder="Quantity" required st-select-on-click fcsa-number/>
+              <input class="form-control" type="text" name="quantity" ng-model="quantity" placeholder="Quantity" st-select-on-click fcsa-number/>
               <span class="input-group-addon">{{ price * quantity | number:2 }}</span>
 
               <!-- fcsa-number="{ maxDecimals: 0, preventInvalidInput: true }"  -->
@@ -95,7 +95,7 @@
         </div>
 
         <div class="form-group">
-          <button type="submit" class="btn btn-primary" ng-click="reset()">Reset</button>
+          <button type="reset" class="btn btn-primary" ng-click="reset()">Reset</button>
           <button type="submit" class="btn btn-success" ng-click="placeOrder()">Open</button>
         </div>
 
@@ -115,7 +115,8 @@
               <th class="col-sm-1">Symbol</th>
               <th class="col-sm-1 text-align-center">Price</th>
               <th class="col-sm-1 text-align-center">Quantity</th>
-              <th class="col-sm-1 text-align-center">P/L</th>
+              <th class="col-sm-1 text-align-center">Unreal P/L</th>
+              <th class="col-sm-1 text-align-center">Real P/L</th>
               <th class="col-sm-1 text-align-center">Value</th>
               <th class="col-md-1 text-align-center">Put</th>
               <th class="col-md-1 text-align-center">Pop</th>
@@ -134,8 +135,11 @@
               <td class='text-align-center'>
                 {{ position.quantity }}
               </td>
-              <td class='text-align-right'>
+              <td class='text-align-right' ng-class="{ 'profit': position.unrealizedPNL > 0, 'loss': position.unrealizedPNL < 0, 'even': position.unrealizedPNL === 0 }">
                 {{ position.unrealizedPNL | number:2 }}
+              </td>
+              <td class='text-align-right' ng-class="{ 'profit': position.realizedPNL > 0, 'loss': position.realizedPNL < 0, 'even': position.realizedPNL === 0 }">
+                {{ position.realizedPNL | number:2 }}
               </td>
               <td class='text-align-right'>
                 {{ position.quantity * position.price | number:2 }}

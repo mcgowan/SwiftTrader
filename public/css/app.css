@@ -87,6 +87,18 @@ li > div > input.form-control {
    text-align: right;   
 }
 
+.profit {
+	color: #009900;
+}
+
+.loss {
+	color: red;
+}
+
+.even {
+	color: #3399ff;
+}
+
 @font-face {
 	font-family: 'RobotoL';
 	font-style: normal;

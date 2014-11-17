@@ -42,6 +42,9 @@ io.on('connection', function (socket) {
 		// 	socket.emit('ticker:price', { tickerId: data.id, price: price++ });
 		// }, 1000);
 
+	}).on('ticker:cancel', function (data) {
+		ib.cancelTickerPrice(data);
+
 	}).on('positions:get', function (data) {
 		// ib.getPositions(socket, 'U1234567'); //TODO
 		ib.getPositions(socket, 'DU210102'); //TODO
