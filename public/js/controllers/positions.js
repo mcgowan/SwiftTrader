@@ -15,6 +15,10 @@ var PositionsCtrl = ST.controller('PositionsCtrl', function PositionsCtrl($scope
         socket.emit('orders:open');
     }
 
+    $scope.reversePosition = function (position) {
+        socket.emit('position:reverse', position);
+    }
+
     $scope.closePosition = function (position) {
         socket.emit('position:close', position);
     }
@@ -94,10 +98,12 @@ var PositionsCtrl = ST.controller('PositionsCtrl', function PositionsCtrl($scope
 
             console.log(data);
 
+            $scope.socketId = data.socketId;
+
             position = data;
             position.symbol = data.contract.symbol;
             position.put = data.quantity;
-            position.pop = 1;
+            position.pop = data.quantity/2;
             position.tickerId = Math.floor((Math.random() * 1000) + 1);
 
             socket.emit('ticker:price', { id: position.tickerId, symbol: position.symbol });
@@ -139,10 +145,11 @@ var PositionsCtrl = ST.controller('PositionsCtrl', function PositionsCtrl($scope
 
         var position = _.find($scope.positions, function (p) { return p.contract.symbol === data.symbol });
 
-        position.stopPrice = data.stopPrice;
-        position.stop ? position.stop.orderId = data.orderId : position.stop = { orderId: data.orderId };
-
-        console.log(position);
+        if (position) {
+            position.stopPrice = data.stopPrice;
+            position.stop ? position.stop.orderId = data.orderId : position.stop = { orderId: data.orderId };
+            console.log(position);
+        }
 
     });
 

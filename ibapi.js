@@ -1,18 +1,30 @@
 var _ = require('lodash');
+var moment = require('moment');
 
-function IB() {
+function IB(clientId) {
 
 	require('colors');
 
 	this.subscriptions = [];
 	this.orderIds = [];
+	this.alerts = [];
+	this.falses = [
+		'Order Canceled - reason:'
+	];
 
 	this.ib = new (require('ib'))({
-	// clientId: 0,
+	clientId: clientId,
 	// host: '127.0.0.1',
 	// port: 7496
 	}).on('error', function (err) {
+
+
+		console.log(err);
+
 		console.error(err.message.red);
+
+
+
 	}).on('orderStatus', function (id, status, filled, remaining, avgFillPrice, permId,
 		                               parentId, lastFillPrice, clientId, whyHeld) {
 		// console.log('orderStatus... ' + id);
@@ -73,14 +85,33 @@ IB.prototype.getTickerPrice = function (socket, ticker) {
 			// only emit to subscribed sockets
 
 			if (_.findWhere(me.subscriptions, { type: 'getTickerPrice', socketId: socket.id, data: { tickerId: tickerId, symbol: ticker.symbol } }))
-				socket.emit('ticker:price', { tickerId: tickerId, symbol: ticker.symbol, price: price });
+				socket.emit('ticker:price', { socketId: socket.id, tickerId: tickerId, symbol: ticker.symbol, price: price });
 		}
 	});
 
 };
 
-IB.prototype.cancelTickerPrice = function (tickerId) {
-	this.ib.cancelMktData(tickerId);
+IB.prototype.cancelTickerPrice = function (socket, tickerId) {
+	var me = this;
+	
+
+	//remove from subscription...
+
+	// if already subscribed to symbol (with different ticker id), unsubscribe first
+	var sub = _.findWhere(me.subscriptions, { type: 'getTickerPrice', socketId: socket.id, data: { tickerId: tickerId } });
+
+	if (sub) {
+		sub.cancel();
+		me.subscriptions = _.reject(me.subscriptions, function (subscription) {
+			return subscription.type === 'getTickerPrice' && subscription.socketId === sub.socketId && subscription.data.tickerId === sub.data.tickerId;
+		});
+	}
+
+
+	// this.ib.cancelMktData(tickerId);
+
+
+
 };
 
 IB.prototype.getPositions = function (socket, account) {
@@ -109,7 +140,7 @@ IB.prototype.getPositions = function (socket, account) {
 			me.ib.on('updatePortfolio', function (contract, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName) {
 				
 
-				console.log('updatePortfolio');
+				// console.log('updatePortfolio');
 
 				var position = { 
 					socketId: socket.id,
@@ -152,26 +183,66 @@ IB.prototype.getPositions = function (socket, account) {
 	});
 };
 
-IB.prototype.placeOrder = function (sockets, type, order) {
+IB.prototype.placeOrder = function (socket, sockets, type, order) {
 	var me = this;
 	
 	me.ib.reqIds(1);
 
-	console.log('placeOrder');
+	// console.log('placeOrder=ioioioioioioioio-->' + socket.id);
 
-	
+	// var socketId = socket.id;
+
+	// var blah = function (alert) {
+	// 				// socket.emit('alert', alert);
+	// 				// console.log(socket.id + ' ' + me.alerts.length);
+	// 				//return socket;
+	// 			socket.emit('alert', alert);
+	// 			console.log(socketId + ' ' + socket.id + ' ' + me.alerts.length);
+
+
+	// }
+
+
 	me.ib.once('nextValidId', function (orderId) {
 		
+		
+		me.ib.on('error', function (error, type) {
+
+			if (type && type.id > 0 && !_.find(me.falses, function(f) { return f === error.message })) {
+
+				var alert = { id: type.id, socketId: socket.id, type: 'Error', code: type.code, message: error.message, time: moment() };
+
+					// console.log(alert);
+
+				if (!_.find(me.alerts, function (a) { return a.id === alert.id && a.code === alert.code && a.socketId === alert.socketId && alert.time.diff(a.time) < 500 })) {
+					me.alerts.push(alert);
+					
+
+					// blah(alert);
+
+					// var io = blah();
+
+					socket.emit('alert', alert);
+					// console.log(socketId + ' ' + socket.id + ' ' + me.alerts.length);
+
+
+
+				}
+			}
+
+		});
+
+
 		if (type === me.orderTypes.Market) {
 			
-			// console.log('me.orderTypes.Market');
+			console.log('me.orderTypes.Market');
 			console.log(order);
 
 			me.ib.placeOrder(orderId, me.ib.contract.stock(order.symbol), me.ib.order.market(order.action, order.quantity, true));
 
 
 		} else if (type === me.orderTypes.Stop) {
-			console.log('placing stop');
+			console.log('me.orderTypes.Stop');
 			console.log(order);
 
 			me.ib.placeOrder(orderId, me.ib.contract.stock(order.symbol), me.ib.order.stop(order.action, order.quantity, order.stopPrice, true));
@@ -182,7 +253,7 @@ IB.prototype.placeOrder = function (sockets, type, order) {
 		me.ib.on('orderStatus', function (id, status, filled, remaining, avgFillPrice, permId,
 			parentId, lastFillPrice, clientId, whyHeld) {
 			
-			console.log('orderStatus');
+			// console.log('orderStatus');
 
 			if (id === orderId) {
 				
@@ -193,8 +264,6 @@ IB.prototype.placeOrder = function (sockets, type, order) {
 
 							console.log('sockets.emit -> positions:update (Filled)');
 
-// var output = {stopPrice:order.stopPrice,id:id, status:status, filled:filled, remaining:remaining, avgFillPrice:avgFillPrice, permId:permId,
-// 		                               parentId:parentId, lastFillPrice:lastFillPrice, clientId:clientId, whyHeld:whyHeld};
 
 							sockets.emit('positions:update', { orderId: orderId, symbol: order.symbol, quantity: order.action === 'SELL' ? order.quantity * -1 : order.quantity });
 
@@ -204,25 +273,17 @@ IB.prototype.placeOrder = function (sockets, type, order) {
 								
 								// me.ib.placeOrder(orderId + 1, me.ib.contract.stock(order.symbol), me.ib.order.stop(order.action === 'SELL' ? 'BUY' : 'SELL', order.stopQuantity ? order.stopQuantity : order.quantity, order.stop, true));
 
-								me.placeOrder(sockets, me.orderTypes.Stop, { 
+								me.placeOrder(socket, sockets, me.orderTypes.Stop, { 
 									symbol: order.symbol, 
 									
 									// action: order.action === 'SELL' ? 'BUY' : 'SELL', 
-									action: order.stopAction,
+									action: order.stopAction ? order.stopAction : order.action === 'SELL' ? 'BUY' : 'SELL',
 
 
-									quantity: order.stopQuantity ? order.stopQuantity : order.quantity, 
+									quantity: order.stopQuantity && order.stopQuantity > 0 ? order.stopQuantity : order.quantity, 
 									stopPrice: order.stop 
 								});
-
-// { symbol: 'FB',
-//   action: 'BUY',
-//   quantity: 100,
-//   stop: 63,
-//   stopQuantity: 600 }								
-
-							}
-
+							} 
 						}
 					}, 2000);
 				} else if (status === 'PreSubmitted') {
@@ -231,9 +292,6 @@ IB.prototype.placeOrder = function (sockets, type, order) {
 
 					if (!_.find(me.orderIds, function (id) { return id === orderId })) {
 						me.orderIds.push(orderId);
-
-// var output = {stopPrice:order.stopPrice,id:id, status:status, filled:filled, remaining:remaining, avgFillPrice:avgFillPrice, permId:permId,
-// 		                               parentId:parentId, lastFillPrice:lastFillPrice, clientId:clientId, whyHeld:whyHeld};
 
 						console.log('sockets.emit -> positions:update (PreSubmitted)');
 
@@ -247,14 +305,33 @@ IB.prototype.placeOrder = function (sockets, type, order) {
 	});
 }
 
-IB.prototype.closePosition = function (sockets, position) {
+IB.prototype.reversePosition = function (socket, sockets, position) {
+
+	// if (position.stop) 
+	// 	this.ib.cancelOrder(position.stop.orderId);
+
+	// this.placeOrder(sockets, this.orderTypes.Market, { symbol: position.contract.symbol, action: position.quantity > 0 ? 'SELL' : 'BUY', quantity: Math.abs(position.quantity) });
+
+	// position.reverse = true;
+
+	// this.closePosition(sockets, position);
+
 	if (position.stop) 
 		this.ib.cancelOrder(position.stop.orderId);
 
-	this.placeOrder(sockets, this.orderTypes.Market, { symbol: position.contract.symbol, action: position.quantity > 0 ? 'SELL' : 'BUY', quantity: Math.abs(position.quantity) });
+	this.placeOrder(socket, sockets, this.orderTypes.Market, { symbol: position.contract.symbol, action: position.quantity > 0 ? 'SELL' : 'BUY', quantity: Math.abs(position.quantity) * 2 });
+
+
 }
 
-IB.prototype.updatePosition = function (sockets, action, position) {
+IB.prototype.closePosition = function (socket, sockets, position) {
+	if (position.stop) 
+		this.ib.cancelOrder(position.stop.orderId);
+
+	this.placeOrder(socket, sockets, this.orderTypes.Market, { symbol: position.contract.symbol, action: position.quantity > 0 ? 'SELL' : 'BUY', quantity: Math.abs(position.quantity) });
+}
+
+IB.prototype.updatePosition = function (socket, sockets, action, position) {
 	console.log('updatePosition');
 	console.log(position);
 
@@ -288,10 +365,10 @@ IB.prototype.updatePosition = function (sockets, action, position) {
 
 	console.log(order);
 
-	this.placeOrder(sockets, this.orderTypes.Market, order);
+	this.placeOrder(socket, sockets, this.orderTypes.Market, order);
 }
 
-IB.prototype.updateStop = function (sockets, stop) {
+IB.prototype.updateStop = function (socket, sockets, stop) {
 	var me = this;
 
 	console.log('updateStop');
@@ -299,7 +376,7 @@ IB.prototype.updateStop = function (sockets, stop) {
 	if (stop.orderId)
 		me.ib.cancelOrder(stop.orderId);
 
-	me.placeOrder(sockets, me.orderTypes.Stop, { 
+	me.placeOrder(socket, sockets, me.orderTypes.Stop, { 
 		symbol: stop.symbol, 
 		action: stop.quantity > 0 ? 'SELL' : 'BUY', 
 		quantity: Math.abs(parseInt(stop.quantity, 10)), 

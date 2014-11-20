@@ -1,6 +1,6 @@
 var OrderCtrl = ST.controller('OrderCtrl', function OrderCtrl($scope, $rootScope, api, socket) {
 
-    var actions = Object.freeze({ buy: { key: 1, value: 'BUY' }, sell: { key: 2, value: "SELL" } });
+    var actions = Object.freeze({ buy: { key: 1, value: 'BUY' }, sell: { key: 2, value: 'SELL' } });
 
     $scope.action = actions.buy;
     $scope.tickerId = Math.floor((Math.random() * 1000) + 1);
@@ -54,6 +54,7 @@ var OrderCtrl = ST.controller('OrderCtrl', function OrderCtrl($scope, $rootScope
     });
 
     $scope.placeOrder = function () {
+        console.log($scope.tickerId);
         socket.emit('order:place', { symbol: $scope.ticker.symbol, action: $scope.action.value, quantity: parseInt($scope.quantity, 10), stop: parseFloat($scope.stop) });
         $scope.reset();
     }

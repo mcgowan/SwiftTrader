@@ -15,16 +15,27 @@ app.use(express.static(__dirname + '/public/'));
 
 // socket.io gateway to IB...
 
-var IB = require("./ibapi");
-var ib = new IB();
+var ibapi = require("./ibapi");
 
+var ibapis = [];
+
+var ib = new ibapi(1);
 ib.connect();
+
+var ib2 = new IB(2);
+ib2.connect();
 
 var io = require('socket.io').listen(app.listen(3000));
 
 io.on('connection', function (socket) {
+	
 	socket.on('error', function (err) {
+		
+		console.log('xx------------on err');
 		console.error(err.message.red);
+
+
+
 	}).on('disconnect',function(){
 		ib.clean(socket);
 
@@ -43,22 +54,25 @@ io.on('connection', function (socket) {
 		// }, 1000);
 
 	}).on('ticker:cancel', function (data) {
-		ib.cancelTickerPrice(data);
+		ib.cancelTickerPrice(socket, data);
 
 	}).on('positions:get', function (data) {
 		// ib.getPositions(socket, 'U1234567'); //TODO
 		ib.getPositions(socket, 'DU210102'); //TODO
 
+	}).on('position:reverse', function (data) {
+		ib.reversePosition(socket, io.sockets, data);
+
 	}).on('position:close', function (data) {
-		ib.closePosition(io.sockets, data);
+		ib.closePosition(socket, io.sockets, data);
 	}).on('position:put', function (data) {
-		ib.updatePosition(io.sockets, ib.actions.Put, data);
+		ib.updatePosition(socket, io.sockets, ib.actions.Put, data);
 	}).on('position:pop', function (data) {
-		ib.updatePosition(io.sockets, ib.actions.Pop, data);
+		ib.updatePosition(socket, io.sockets, ib.actions.Pop, data);
 	}).on('stop:update', function (data) {
-		ib.updateStop(io.sockets, data);
+		ib.updateStop(socket, io.sockets, data);
 	}).on('order:place', function (data) {
-		ib.placeOrder(io.sockets, ib.orderTypes.Market, data);
+		ib.placeOrder(socket, io.sockets, ib.orderTypes.Market, data);
 	}).on('orders:open', function () {
 		console.log('orders:open');
 		ib.getOpenOrders(socket);
@@ -74,10 +88,10 @@ function exitHandler(options, err) {
 }
 
 //do something when app is closing
-process.on('exit', exitHandler.bind(null,{cleanup:true}));
+process.on('exit', exitHandler.bind(null, {cleanup: true}));
 
 //catches ctrl+c event
-process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+process.on('SIGINT', exitHandler.bind(null, {exit: true}));
 
 //catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
