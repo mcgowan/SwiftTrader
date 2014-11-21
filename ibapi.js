@@ -21,7 +21,7 @@ function IB(clientId) {
 
 		console.log(err);
 
-		console.error(err.message.red);
+		// console.error(err.message.red);
 
 
 
@@ -80,6 +80,8 @@ IB.prototype.getTickerPrice = function (socket, ticker) {
 	me.ib.reqMktData(ticker.id, me.ib.contract.stock(ticker.symbol), '', false);
 
 	me.ib.on('tickPrice', function (tickerId, tickType, price, canAutoExecute) {
+		
+
 		if (me.ib.util.tickTypeToString(tickType) === 'LAST') {
 			
 			// only emit to subscribed sockets
